@@ -1,0 +1,349 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="keywords" content="remark,remarkjs,markdown,slideshow,presentation" />
+    <meta name="description" content="A simple, in-browser, markdown-driven slideshow tool." />
+    <!-- <title>Remark</title> -->
+    <style>
+      @import url(https://fonts.googleapis.com/css?family=Droid+Serif);
+      @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
+      @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+
+      body {
+        font-family: 'Droid Serif';
+      }
+      h1, h2, h3 {
+        font-family: 'Yanone Kaffeesatz';
+        font-weight: 400;
+        margin-bottom: 0;
+      }
+      .remark-slide-content h1 { font-size: 3em; }
+      .remark-slide-content h2 { font-size: 2em; }
+      .remark-slide-content h3 { font-size: 1.6em; }
+      .footnote {
+        position: absolute;
+        bottom: 3em;
+      }
+      li p { line-height: 1.25em; }
+      .red { color: #fa0000; }
+      .large { font-size: 2em; }
+      a, a > code {
+        color: rgb(249, 38, 114);
+        text-decoration: none;
+      }
+      code {
+        background: #e7e8e2;
+        border-radius: 5px;
+      }
+      .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+      .remark-code-line-highlighted     { background-color: #373832; }
+      .pull-left {
+        float: left;
+        width: 47%;
+      }
+      .pull-right {
+        float: right;
+        width: 47%;
+      }
+      .pull-right ~ p {
+        clear: both;
+      }
+      #slideshow .slide .content code {
+        font-size: 0.8em;
+      }
+      #slideshow .slide .content pre code {
+        font-size: 0.9em;
+        padding: 15px;
+      }
+      .inverse {
+        background: #272822;
+        color: #777872;
+        text-shadow: 0 0 20px #333;
+      }
+      .inverse h1, .inverse h2 {
+        color: #f3f3f3;
+        line-height: 0.8em;
+      }
+
+      /* Slide-specific styling */
+      #slide-inverse .footnote {
+        bottom: 12px;
+        left: 20px;
+      }
+      #slide-how .slides {
+        font-size: 0.9em;
+        position: absolute;
+        top:  151px;
+        right: 140px;
+      }
+      #slide-how .slides h3 {
+        margin-top: 0.2em;
+      }
+      #slide-how .slides .first, #slide-how .slides .second {
+        padding: 1px 20px;
+        height: 90px;
+        width: 120px;
+        -moz-box-shadow: 0 0 10px #777;
+        -webkit-box-shadow: 0 0 10px #777;
+        box-shadow: 0 0 10px #777;
+      }
+      #slide-how .slides .first {
+        background: #fff;
+        position: absolute;
+        top: 20%;
+        left: 20%;
+        z-index: 1;
+      }
+      #slide-how .slides .second {
+        position: relative;
+        background: #fff;
+        z-index: 0;
+      }
+
+      /* Two-column layout */
+      .left-column {
+        color: #777;
+        width: 20%;
+        height: 92%;
+        float: left;
+      }
+        .left-column h2:last-of-type, .left-column h3:last-child {
+          color: #000;
+        }
+      .right-column {
+        width: 75%;
+        float: right;
+        padding-top: 1em;
+      }
+    </style>
+  </head>
+  <body>
+    <textarea id="source">
+
+class: center, middle
+
+# 8. Release Engineering
+
+---
+
+# Release Engineering
+
+- **Concisely**
+
+  Building and delivering software.
+
+- **Understanding**
+
+  Source code management, compilers, build configuration languages, automated build tools, package managers, and installers.
+
+- **Knowledge**
+
+  Development, configuration management, test integration, system administration, and customer support.
+
+- **Work**
+
+  With software engineers (SWEs) in product development and SREs to define all the steps required to release software.
+
+---
+
+# The Role of a Release Engineer
+
+Define best practices for using tools in order to make sure
+projects are released using consistent and repeatable methodologies.
+
+---
+
+# Philosophy
+
+- **Self-Service Model:**
+
+  Release engineering develop best practices and tools that allow product development teams to control and run their own release processes.
+
+- **High Velocity** 
+
+  - Hourly builds and then select the version to actually deploy
+
+  - “Push on Green” release model
+
+- **Hermetic Builds**
+
+  - Consistency and repeatability
+
+  - Insensitive to the libraries and other software installed on the build machine
+
+- **Enforcement of Policies and Procedures**
+
+  Determine who can perform specific operations when releasing a project.
+
+---
+
+# Continuous Build and Deployment
+
+- **Building**
+
+  - Define build targets and specify the dependencies
+
+  - Automatically build(Blaze)
+
+- **Branching**
+
+  Branch from the mainline at a specific revision and never merge changes from the branch back into the mainline.
+
+- **Testing**
+
+  - Unit tests the code in the mainline when a change is submitted
+
+  - The same test targets that gate the project release
+
+- **Packaging**
+
+  - Midas Package Manager
+
+  - Guarantees a package can be uniquely referenced
+
+---
+
+# Continuous Build and Deployment
+
+- **Rapid**
+
+  ![rapid.png](rapid.png)
+
+---
+
+# Continuous Build and Deployment
+
+- **Deployment**
+
+  - Sisyphus, Rapid creates a rollout in a long-running Sisyphus job
+
+  - **Development or pre-production environments:** build hourly and push releases automatically when all tests pass
+
+  - **Large user-facing services:** tarting in one cluster and expand exponentially
+
+  - **Sensitive pieces of infrastructure:** extend the rollout over several days, interleaving them across instances in different geographic regions
+
+---
+
+# Configuration Management
+
+- Use the mainline for configuration
+
+- Include configuration files and binaries in the same package
+
+- Package configuration files into “configuration packages.”
+
+- Read configuration files from an external store
+
+---
+
+# Conclusions
+
+- Take the effort to define their release processes
+
+- Start Release Engineering at the Beginning
+
+
+---
+
+class: center, middle
+
+# 9. Simplicity
+
+---
+
+# Simplicity
+
+"Perfection is finally attained not when there is no longer more to add, but when there is no longer anything to take away." - Antoine de Saint Exupery
+
+---
+
+# System Stability Versus Agility
+
+- Balanced mix of stability and agility
+
+- As little impact on developer agility as possible
+
+- Reliable processes tend to actually increase developer agility
+
+---
+
+# The Virtue of Boring
+
+- Predictably
+
+- Essential complexity and accidental complexity
+
+- Minimizing accidental complexity
+
+---
+
+# I Won’t Give Up My Code!
+
+- Hundreds of lines of commented code create distractions and confusion
+
+- Code that is never executed, gated by a flag that is always disabled, is a metaphorical time bomb
+
+- All code has an essential purpose
+
+---
+
+# The “Negative Lines of Code” Metric
+
+- Software bloat
+
+- Every line of code changed or added to a project creates the potential for introducing new defects and
+bugs
+
+---
+
+# Minimal APIs
+
+- The fewer methods and arguments we provide, the easier that API will be to understand
+
+- Less is more
+
+---
+
+# Modularity
+
+- Loose coupling
+
+- A well-designed distributed system consists of collaborators, each of which has a clear and well-scoped purpose
+
+---
+
+# Release Simplicity
+
+- Easier to measure and understand the impact of a single change
+
+- Taking small steps at a time
+
+---
+
+# Conclusion
+
+- Software simplicity is a prerequisite to reliability
+
+- Simplify each step of a given task
+
+- Keeping the environment uncluttered
+
+
+    </textarea>
+    <script src="../remark-latest.min.js"></script>
+    <script>
+      var hljs = remark.highlighter.engine;
+    </script>
+<!--     <script src="remark.language.js"></script> -->
+    <script>
+      var slideshow = remark.create({
+          highlightStyle: 'monokai',
+          highlightLanguage: 'remark',
+          highlightLines: true
+        }) ;
+    </script>
+  </body>
+</html>
