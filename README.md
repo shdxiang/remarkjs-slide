@@ -1,2 +1,2 @@
 # remarkjs-slide
-My slides writen by remarkjs
+Slides designed by remarkjs
