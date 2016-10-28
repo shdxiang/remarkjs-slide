@@ -1,0 +1,423 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="keywords" content="remark,remarkjs,markdown,slideshow,presentation" />
+    <meta name="description" content="A simple, in-browser, markdown-driven slideshow tool." />
+    <!-- <title>Remark</title> -->
+    <style>
+      @import url(https://fonts.googleapis.com/css?family=Droid+Serif);
+      @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
+      @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+
+      body {
+        font-family: 'Droid Serif';
+      }
+      h1, h2, h3 {
+        font-family: 'Yanone Kaffeesatz';
+        font-weight: 400;
+        margin-bottom: 0;
+      }
+      .remark-slide-content h1 { font-size: 3em; }
+      .remark-slide-content h2 { font-size: 2em; }
+      .remark-slide-content h3 { font-size: 1.6em; }
+      .footnote {
+        position: absolute;
+        bottom: 3em;
+      }
+      li p { line-height: 1.25em; }
+      .red { color: #fa0000; }
+      .large { font-size: 2em; }
+      a, a > code {
+        color: rgb(249, 38, 114);
+        text-decoration: none;
+      }
+      code {
+        background: #e7e8e2;
+        border-radius: 5px;
+      }
+      .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+      .remark-code-line-highlighted     { background-color: #373832; }
+      .pull-left {
+        float: left;
+        width: 47%;
+      }
+      .pull-right {
+        float: right;
+        width: 47%;
+      }
+      .pull-right ~ p {
+        clear: both;
+      }
+      #slideshow .slide .content code {
+        font-size: 0.8em;
+      }
+      #slideshow .slide .content pre code {
+        font-size: 0.9em;
+        padding: 15px;
+      }
+      .inverse {
+        background: #272822;
+        color: #777872;
+        text-shadow: 0 0 20px #333;
+      }
+      .inverse h1, .inverse h2 {
+        color: #f3f3f3;
+        line-height: 0.8em;
+      }
+
+      /* Slide-specific styling */
+      #slide-inverse .footnote {
+        bottom: 12px;
+        left: 20px;
+      }
+      #slide-how .slides {
+        font-size: 0.9em;
+        position: absolute;
+        top:  151px;
+        right: 140px;
+      }
+      #slide-how .slides h3 {
+        margin-top: 0.2em;
+      }
+      #slide-how .slides .first, #slide-how .slides .second {
+        padding: 1px 20px;
+        height: 90px;
+        width: 120px;
+        -moz-box-shadow: 0 0 10px #777;
+        -webkit-box-shadow: 0 0 10px #777;
+        box-shadow: 0 0 10px #777;
+      }
+      #slide-how .slides .first {
+        background: #fff;
+        position: absolute;
+        top: 20%;
+        left: 20%;
+        z-index: 1;
+      }
+      #slide-how .slides .second {
+        position: relative;
+        background: #fff;
+        z-index: 0;
+      }
+
+      /* Two-column layout */
+      .left-column {
+        color: #777;
+        width: 20%;
+        height: 92%;
+        float: left;
+      }
+        .left-column h2:last-of-type, .left-column h3:last-child {
+          color: #000;
+        }
+      .right-column {
+        width: 75%;
+        float: right;
+        padding-top: 1em;
+      }
+    </style>
+  </head>
+  <body>
+    <textarea id="source">
+
+class: center, middle
+
+# 8. Practical Alerting from Time-Series Data
+
+---
+
+# Monitoring systems
+
+- Alert for high-level service objectives
+
+- Retain the granularity to inspect individual components as needed
+
+---
+
+# The Rise of Borgmon
+
+- Relies on a common data exposition format
+
+- Metrics format had to be standardized
+
+  ```bash
+  % curl http://webserver:80/varz
+  http_requests 37
+  errors_total 12
+  ```
+
+- Hierarchies
+
+  - A Borgmon can collect from other Borgmon
+
+- Open source tools
+
+  - Riemann, Heka, Bosun, and Prometheus
+
+  - Prometheus shares many similarities with Borgmon
+
+---
+
+# Instrumentation of Applications
+
+- Extension of mapped variable
+
+  ```bash
+  http_responses map:code 200:25 404:0 500:12
+  ```
+
+- Easy to add new instrumentation
+
+- Trade-off against ongoing maintenance
+
+- Exporting Variables
+
+  "Each of the major languages used at Google has an implementation of the exported variable interface that automagically registers with the HTTP server built into every Google binary by default."
+
+---
+
+# Collection of Exported Data
+
+- Configured with a target list(often dynamic)
+
+- At predefined intervals
+
+  - Fetches the /varz URI on each target
+
+  - Decodes the results
+
+  - Stores the values in memory
+
+- Also records "synthetic" variables
+
+  - Make it easy to write rules to detect if the monitored tasks are unavailable
+
+---
+
+# Storage in the Time-Series Arena
+
+- Time-Series
+
+  ![time-series.png](./time-series.png)
+
+- Borgmon stores all the data in an in-memory database
+
+- Regularly checkpointed to disk
+
+- Archived to an external system known as the Time-Series Database (TSDB)
+
+---
+
+# Labels and Vectors
+
+- Vector: Time-series are stored as sequences of numbers
+
+- Name time-series: A set of labels expressed as *key=value* pairs
+
+  ```python
+  {var=http_requests,job=webserver,instance=host0:80,service=web,zone=us-west}
+  ```
+
+- Query
+
+  ```python
+  {var=http_requests,job=webserver,service=web,zone=us-west}[3m]
+  ```
+
+  Result:
+
+  ```python
+  {var=http_requests,job=webserver,instance=host0:80,...} 0 1 2
+  {var=http_requests,job=webserver,instance=host1:80,...} 0 1 1
+  {var=http_requests,job=webserver,instance=host2:80,...} 0 0 0
+  {var=http_requests,job=webserver,instance=host3:80,...} 0 1 2
+  {var=http_requests,job=webserver,instance=host4:80,...} 0 1 2
+  ```
+
+---
+
+# Rule Evaluation
+
+- Borgmon rules
+
+  Consists of simple algebraic expressions that compute time-series from other time-series.
+
+- Aggregation
+
+- A web server example
+
+  Rules:
+
+  ```python
+  rules <<<
+      # Compute the rate of requests for each task from the count of requests
+      {var=task:http_requests:rate10m,job=webserver} =
+        rate({var=http_requests,job=webserver}[10m]);
+  ```
+
+  Result:
+
+  ```python
+  {var=task:http_requests:rate10m,job=webserver,instance=host0:80,...} 1
+  {var=task:http_requests:rate10m,job=webserver,instance=host2:80,...} 0.9
+  {var=task:http_requests:rate10m,job=webserver,instance=host3:80,...} 1.1
+  {var=task:http_requests:rate10m,job=webserver,instance=host4:80,...} 0
+  {var=task:http_requests:rate10m,job=webserver,instance=host5:80,...} 1
+  ```
+
+---
+
+# Rule Evaluation
+
+  Rules:
+
+  ```python
+    # Sum the rates to get the aggregate rate of queries for the cluster;
+    # 'without instance' instructs Borgmon to remove the instance label
+    # from the right hand side.
+    {var=dc:http_requests:rate10m,job=webserver} =
+      sum without instance({var=task:http_requests:rate10m,job=webserver})
+  >>>
+  ```
+
+  Result:
+
+  ```python
+  {var=dc:http_requests:rate10m,job=webserver,service=web,zone=us-west} 4
+  ```
+---
+
+# Rule Evaluation
+
+  Rules:
+
+  ```python
+  rules <<<
+    # Compute a rate pertask and per ‘code’ label
+    {var=task:http_responses:rate10m,job=webserver} =
+      rate by code({var=http_responses,job=webserver}[10m]);
+    # Compute a cluster level response rate per ‘code’ label
+    {var=dc:http_responses:rate10m,job=webserver} =
+      sum without instance({var=task:http_responses:rate10m,job=webserver});
+    # Compute a new cluster level rate summing all non 200 codes
+    {var=dc:http_errors:rate10m,job=webserver} = sum without code(
+      {var=dc:http_responses:rate10m,jobwebserver,code=!/200/};
+    # Compute the ratio of the rate of errors to the rate of requests
+    {var=dc:http_errors:ratio_rate10m,job=webserver} =
+      {var=dc:http_errors:rate10m,job=webserver}
+        /
+      {var=dc:http_requests:rate10m,job=webserver};
+  >>>
+  ```
+---
+
+# Rule Evaluation
+
+  Result:
+
+  ```python
+  {var=task:http_responses:rate10m,job=webserver,code=200,...} 1
+  {var=task:http_responses:rate10m,job=webserver,code=500,...} 0
+  {var=task:http_responses:rate10m,job=webserver,code=200,...} 0.5
+  ...
+  ```
+
+  ```python
+  {var=dc:http_responses:rate10m,job=webserver,code=200, ...} 3.4
+  {var=dc:http_responses:rate10m,job=webserver,code=500, ...} 0.6
+  ```
+
+  ```python
+  {var=dc:http_responses:rate10m,job=webserver,code=500, ...} 0.6
+  ```
+
+  ```python
+  {var=dc:http_errors:rate10m,job=webserver, ...} 0.6
+  ```
+
+  ```python
+  {var=dc:http_errors:ratio_rate10m,job=webserver} 0.15
+  ```
+
+---
+
+# Alerting
+
+- Example
+
+  ```python
+  rules <<<
+    {var=dc:http_errors:ratio_rate10m,job=webserver} > 0.01
+      and by job, error
+    {var=dc:http_errors:rate10m,job=webserver} > 1
+      for 2m
+      => ErrorRatioTooHigh
+      details "webserver error ratio at [[trigger_value]]"
+      labels {severity=page};
+  >>>
+  ```
+
+- Alertmanager
+
+  Routing the alert notification to the correct destination.
+
+---
+
+# Sharding the Monitoring Topology
+
+- Data-flow
+
+  ![borgmon-data-flow.png](./borgmon-data-flow.png)
+
+---
+
+# Black-Box Monitoring
+
+- White-box monitoring
+
+  - Inspects the internal state of the target service
+
+  - You aren’t aware of what the users see
+
+- Prober
+
+  - Runs a protocol check against a target and reports success or failure
+
+---
+
+# Maintaining the Configuration
+
+  - Separates the definition of the rules from the targets being monitored
+
+  - Supports language templates
+
+    Enables engineers to construct libraries of rules that can be reused.
+
+---
+
+# Ten Years On...
+
+- Check-and-alert per target into mass variable collection
+
+- A centralized rule evaluation across the time-series for alerting and diagnostics
+
+- Treating time-series data as a data source for generating alerts
+
+
+    </textarea>
+    <script src="../remark-latest.min.js"></script>
+    <script>
+      var hljs = remark.highlighter.engine;
+    </script>
+<!--     <script src="remark.language.js"></script> -->
+    <script>
+      var slideshow = remark.create({
+          highlightStyle: 'monokai',
+          highlightLanguage: 'remark',
+          highlightLines: true
+        }) ;
+    </script>
+  </body>
+</html>
